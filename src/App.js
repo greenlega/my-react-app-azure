@@ -7,7 +7,7 @@ const App = () => {
 
 
 const App = () => {
-  // Стан для зберігання даних, що завантажуються
+  // Стан для зберігання даних, що завантажуют ься
   const [data, setData] = useState([]);
   // Стан для індикатора завантаження
   const [loading, setLoading] = useState(true);
