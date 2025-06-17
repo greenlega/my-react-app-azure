@@ -10,33 +10,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_and_deploy: # Змінено назву завдання
+  build_and_deploy: # Змінено назву завдання на одну об'єднану
     runs-on: ubuntu-latest
     permissions:
-      contents: read # This is required for actions/checkout
-      id-token: write # This is required for requesting the JWT
+      contents: read # Required for actions/checkout
+      id-token: write # Required for requesting the JWT
 
     steps:
       - uses: actions/checkout@v4
 
       # Для простого HTML-сайту, нам не потрібні npm, Node.js або React-збірка.
       # Ми просто пакуємо наш index.html.
-
       - name: Zip HTML for deployment
         run: zip release.zip index.html # Пакуємо лише index.html
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: html-app # Змінено назву артефакту
+          name: html-app # Назва артефакту
           path: release.zip
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_69C94AB1049C4399889B4A06EC627FD5 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_64AD1C9AC67849539EFBD36A1DE073D8 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E2C3A315157B4C78B574DC5EAF8E6277 }}
 
       - name: Download artifact for deployment
         uses: actions/download-artifact@v4
@@ -46,6 +38,13 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
       
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_69C94AB1049C4399889B4A06EC627FD5 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_64AD1C9AC67849539EFBD36A1DE073D8 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E2C3A315157B4C78B574DC5EAF8E6277 }}
+
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
