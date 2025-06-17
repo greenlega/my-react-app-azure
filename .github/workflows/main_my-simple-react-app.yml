@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - my-simple-react-app
+name: Deploy Simple HTML to Azure Web App - my-simple-react-app
 
 on:
   push:
@@ -10,53 +10,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build_and_deploy: # Змінено назву завдання
     runs-on: ubuntu-latest
     permissions:
       contents: read # This is required for actions/checkout
+      id-token: write # This is required for requesting the JWT
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.x'
+      # Для простого HTML-сайту, нам не потрібні npm, Node.js або React-збірка.
+      # Ми просто пакуємо наш index.html.
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          CI=false npm run build # Виправлення: додано CI=false, щоб ігнорувати попередження ESLint як помилки
-          # npm run test --if-present # Цей рядок закоментовано/видалено, оскільки файл тестів було видалено
-
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+      - name: Zip HTML for deployment
+        run: zip release.zip index.html # Пакуємо лише index.html
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
+          name: html-app # Змінено назву артефакту
           path: release.zip
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: read # This is required for actions/checkout
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -64,10 +38,18 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_64AD1C9AC67849539EFBD36A1DE073D8 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E2C3A315157B4C78B574DC5EAF8E6277 }}
 
+      - name: Download artifact for deployment
+        uses: actions/download-artifact@v4
+        with:
+          name: html-app # Завантажуємо артефакт з правильною назвою
+
+      - name: Unzip artifact for deployment
+        run: unzip release.zip
+      
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'my-simple-react-app'
+          app-name: 'my-simple-react-app' # Переконайтесь, що це ім'я вашого App Service
           slot-name: 'Production'
-          package: .
+          package: . # Розгортаємо весь вміст ZIP-файлу (тепер це index.html)
